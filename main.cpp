@@ -2,6 +2,8 @@
 #include <list>
 #include <cmath>
 
+uint64_t MAX_NUMBER = 100'000;
+
 using namespace std;
 
 list<uint64_t>::iterator foundBiggerSquare(list<uint64_t> *vec, list<uint64_t>::iterator iter);
@@ -29,31 +31,6 @@ list<uint64_t>::iterator foundBiggerSquare(list<uint64_t> *vec, list<uint64_t>::
     return vec->end();
 }
 
-uint64_t findInBound(list<uint64_t>*source, uint64_t min, uint64_t max){
-    if(source->empty() || (*prev(source->end()) < min)) return (uint64_t)-1;
-
-    auto mMin = source->begin();
-
-    while(*mMin < min) mMin = next(mMin);
-
-    auto mMax = mMin;
-
-    int count = 0;
-    while(source->end() != next(mMax) && *next(mMax) < max){
-        count++;
-        mMax = next(mMax);
-    }
-
-    int randVal = rand() % count; // NOLINT(cert-msc30-c, cert-msc50-cpp)
-
-    while (randVal){
-        mMin = next(mMin);
-        randVal--;
-    }
-
-    return *mMin;
-}
-
 __uint128_t ipowMod(__uint128_t base, __uint128_t exp, __uint128_t mod){
     if (mod == 1) return 0;
     __uint128_t res = 1;
@@ -72,54 +49,51 @@ __uint128_t ipowMod(__uint128_t base, __uint128_t exp, __uint128_t mod){
 
 int main() {
     srand(time(nullptr)); // NOLINT(cert-msc30-c, cert-msc51-cpp)
-    list<uint64_t> naturShisla;
-    unsigned long res = sieveOfErastosthenes(&naturShisla, 100000);
+    list<uint64_t> primeNumbers;
+    unsigned long res = sieveOfErastosthenes(&primeNumbers, MAX_NUMBER);
 
     uint64_t p = 0;
     uint64_t q;
 
-    auto ptrP = prev(naturShisla.end());
+    auto iterP = prev(primeNumbers.end());
 
     /// при расчете чисел до 100 000
     /// выбирается число р = 99839
     /// тогда при формуле p = 2q + 1
     /// q = 49919, и является простым числом
     /// работает корректно
-    for(; ptrP != naturShisla.begin() && p == 0; ptrP = prev(ptrP)){
-        for(auto ptrQ = prev(ptrP); ptrQ != naturShisla.begin(); ptrQ = prev(ptrQ)){
-            if(*ptrP == (2 * (*ptrQ)) + 1) {
-                p = *ptrP;
-                q = *ptrQ;
+    for(; iterP != primeNumbers.begin() && p == 0; iterP = prev(iterP)){
+        for(auto iterQ = prev(iterP); iterQ != primeNumbers.begin(); iterQ = prev(iterQ)){
+            if(*iterP == (2 * (*iterQ)) + 1) {
+                p = *iterP;
+                q = *iterQ;
                 break;
             }
         }
     }
 
-    uint64_t g = p - 1 - rand() % 1000; // NOLINT(cert-msc30-c, cert-msc50-cpp)
+    // пусть изначальное значение g будет взято от p - 10000 до р - 20000
+    uint64_t g = p - 10000 - rand() % 10000; // NOLINT(cert-msc30-c, cert-msc50-cpp)
 
     for(; g > 0; g--){
         if(ipowMod(g, q, p) != 1) break;
     }
 
-    uint64_t x;
-    // выполняется если x == g
-    // соотвественно, х != g
-    while((x = p - 1 - (rand() % 5000)) == g); // NOLINT(cert-msc30-c, cert-msc50-cpp)
+    // пусть значение x будет от p - 20000 до р - 30000
+    uint64_t x = p - 20000 - rand() % 10000; // NOLINT(cert-msc30-c, cert-msc50-cpp)
 
+    // вычисляем у (секретное число абонента)
     __uint128_t y = ipowMod(g, x, p);
 
     // подготовительная часть завершена
     // зашифруем что то
-
-    uint64_t M = (uint64_t)(rand() * rand() * rand()) % 90000; // NOLINT(cert-msc30-c, cert-msc50-cpp)
-
+    // т.к. М должно быть меньше p то сгенерируем его рандомно, верхняя граница p - 30000
+    uint64_t M = (uint64_t)(rand() * rand() * rand()) % (p - 30000); // NOLINT(cert-msc30-c, cert-msc50-cpp)
 
     cout << "Generated message: " << M << endl;
 
-    uint64_t k;
-    // выполняется если k == g
-    // соотвественно, k != g
-    while((k = p - 2 - (rand() % 5000)) == g || k == x); // NOLINT(cert-msc30-c, cert-msc50-cpp)
+    //пусть значение x будет от p - 40000 до р - 50000
+    uint64_t k = p - 40000 - rand() % 10000;
 
     uint64_t r = ipowMod(g, k, p);
     uint64_t e = M *  ipowMod(y, k, p) % p;
